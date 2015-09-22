@@ -42,7 +42,6 @@
 #include "GafferImage/DeleteChannels.h"
 #include "GafferImage/CollectImages.h"
 #include "GafferImage/CopyChannels.h"
-#include "GafferImage/Merge.h"
 #include "GafferImage/Mix.h"
 #include "GafferImage/Shuffle.h"
 
@@ -122,27 +121,6 @@ void GafferImageModule::bindImageProcessor()
 		enum_<DeleteChannels::Mode>( "Mode" )
 			.value( "Keep", DeleteChannels::Keep )
 			.value( "Delete", DeleteChannels::Delete )
-		;
-	}
-
-	{
-		scope s = GafferBindings::DependencyNodeClass<Merge>();
-
-		enum_<Merge::Operation>( "Operation" )
-			.value( "Add", Merge::Add )
-			.value( "Atop", Merge::Atop )
-			.value( "Divide", Merge::Divide )
-			.value( "In", Merge::In )
-			.value( "Out", Merge::Out )
-			.value( "Mask", Merge::Mask )
-			.value( "Matte", Merge::Matte )
-			.value( "Multiply", Merge::Multiply )
-			.value( "Over", Merge::Over )
-			.value( "Subtract", Merge::Subtract )
-			.value( "Difference", Merge::Difference )
-			.value( "Under", Merge::Under )
-			.value( "Min", Merge::Min )
-			.value( "Max", Merge::Max )
 		;
 	}
 
