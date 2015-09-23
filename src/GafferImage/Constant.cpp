@@ -60,6 +60,8 @@ Constant::Constant( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new FormatPlug( "format" ) );
 	addChild( new Color4fPlug( "color", Plug::In, Color4f( 0, 0, 0, 1 ) ) );
+	addChild( new FloatPlug( "z", Plug::In, 1.0 ) );
+	addChild( new FloatPlug( "zBack", Plug::In, 1.0 ) );
 	addChild( new StringPlug( "layer" ) );
 }
 
@@ -87,14 +89,34 @@ const Gaffer::Color4fPlug *Constant::colorPlug() const
 	return getChild<Color4fPlug>( g_firstPlugIndex+1 );
 }
 
+Gaffer::FloatPlug *Constant::zPlug()
+{
+	return getChild<FloatPlug>( g_firstPlugIndex+2 );
+}
+
+const Gaffer::FloatPlug *Constant::zPlug() const
+{
+	return getChild<FloatPlug>( g_firstPlugIndex+2 );
+}
+
+Gaffer::FloatPlug *Constant::zBackPlug()
+{
+	return getChild<FloatPlug>( g_firstPlugIndex+3 );
+}
+
+const Gaffer::FloatPlug *Constant::zBackPlug() const
+{
+	return getChild<FloatPlug>( g_firstPlugIndex+3 );
+}
+
 Gaffer::StringPlug *Constant::layerPlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 2 );
+	return getChild<StringPlug>( g_firstPlugIndex+4 );
 }
 
 const Gaffer::StringPlug *Constant::layerPlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 2 );
+	return getChild<StringPlug>( g_firstPlugIndex+4 );
 }
 
 void Constant::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
@@ -102,6 +124,12 @@ void Constant::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outpu
 	ImageNode::affects( input, outputs );
 
 	if( input->parent<Plug>() == colorPlug() )
+	{
+		outputs.push_back( outPlug()->channelDataPlug() );
+	}
+
+	if( input == zPlug() ||
+	    input == zBackPlug() )
 	{
 		outputs.push_back( outPlug()->channelDataPlug() );
 	}
@@ -150,6 +178,26 @@ IECore::ConstCompoundDataPtr Constant::computeMetadata( const Gaffer::Context *c
 	return outPlug()->metadataPlug()->defaultValue();
 }
 
+void Constant::hashDeepState( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ImageNode::hashDeepState( output, context, h );
+}
+
+int Constant::computeDeepState( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	return ImagePlug::Flat;
+}
+
+void Constant::hashSampleOffsets( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ImagePlug::flatTileSampleOffsets()->hash( h );
+}
+
+IECore::ConstIntVectorDataPtr Constant::computeSampleOffsets( const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	return ImagePlug::flatTileSampleOffsets();
+}
+
 void Constant::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ImageNode::hashChannelNames( output, context, h );
@@ -171,6 +219,8 @@ IECore::ConstStringVectorDataPtr Constant::computeChannelNames( const Gaffer::Co
 	result.push_back( channelNamePrefix + "G" );
 	result.push_back( channelNamePrefix + "B" );
 	result.push_back( channelNamePrefix + "A" );
+	result.push_back( "Z" );
+	result.push_back( "ZBack" );
 
 	return resultData;
 }
@@ -180,14 +230,39 @@ void Constant::hashChannelData( const GafferImage::ImagePlug *output, const Gaff
 	ImageNode::hashChannelData( output, context, h );
 	// Don't bother hashing the format or tile origin here as we couldn't care less about the
 	// position on the canvas, only the colour!
-	const int channelIndex = ImageAlgo::colorIndex( context->get<std::string>( ImagePlug::channelNameContextName ) );
-	colorPlug()->getChild( channelIndex )->hash( h );
+	const std::string channelName = context->get<std::string>( ImagePlug::channelNameContextName );
+	if ( channelName == "Z" )
+	{
+		zPlug()->hash( h );
+	}
+	else if ( channelName == "ZBack" )
+	{
+		zPlug()->hash( h );
+		zBackPlug()->hash( h );
+	}
+	else
+	{
+		const int channelIndex = ImageAlgo::colorIndex( channelName );
+		colorPlug()->getChild( channelIndex )->hash( h );
+	}
 }
 
 IECore::ConstFloatVectorDataPtr Constant::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	const int channelIndex = ImageAlgo::colorIndex( context->get<std::string>( ImagePlug::channelNameContextName ) );
-	const float value = colorPlug()->getChild( channelIndex )->getValue();
+	float value;
+	if ( channelName == "Z" )
+	{
+		value = zPlug()->getValue();
+	}
+	else if ( channelName == "ZBack" )
+	{
+		value = std::max( zBackPlug()->getValue(), zPlug()->getValue() );
+	}
+	else
+	{
+		const int channelIndex = ImageAlgo::colorIndex( channelName );
+		value = colorPlug()->getChild( channelIndex )->getValue();
+	}
 
 	FloatVectorDataPtr result = new FloatVectorData;
 	result->writable().resize( ImagePlug::tileSize() * ImagePlug::tileSize(), value );
