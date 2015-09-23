@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -37,48 +36,30 @@
 
 #include "boost/python.hpp"
 
-#include "CoreBinding.h"
-#include "ImageProcessorBinding.h"
+#include "GafferBindings/ComputeNodeBinding.h"
+
+#include "GafferImage/FlatImageProcessor.h"
+
 #include "FlatImageProcessorBinding.h"
-#include "TransformBinding.h"
-#include "MetadataBinding.h"
-#include "IOBinding.h"
-#include "WarpBinding.h"
-#include "ShapeBinding.h"
-#include "ImageAlgoBinding.h"
-#include "BufferAlgoBinding.h"
-#include "FilterAlgoBinding.h"
-#include "OpenColorIOTransformBinding.h"
-#include "ChannelDataProcessorBinding.h"
-#include "FilterBinding.h"
-#include "MixinBinding.h"
-#include "DeepNodeBinding.h"
-#include "UtilityNodeBinding.h"
-#include "CatalogueBinding.h"
 
 using namespace boost::python;
-using namespace GafferImageModule;
+using namespace Gaffer;
+using namespace GafferBindings;
+using namespace GafferImage;
 
-BOOST_PYTHON_MODULE( _GafferImage )
+void GafferImageModule::bindFlatImageProcessor()
 {
 
-	bindCore();
-	bindImageProcessor();
-	bindFlatImageProcessor();
-	bindTransforms();
-	bindMetadata();
-	bindIO();
-	bindWarp();
-	bindShape();
-	bindFilters();
-	bindOpenColorIOTransform();
-	bindChannelDataProcessor();
-	bindMixin();
-	bindDeepNodes();
-	bindUtilityNodes();
-	bindCatalogue();
-	bindImageAlgo();
-	bindBufferAlgo();
-	bindFilterAlgo();
+	typedef ComputeNodeWrapper<FlatImageProcessor> FlatImageProcessorWrapper;
+	GafferBindings::DependencyNodeClass<FlatImageProcessor, FlatImageProcessorWrapper>()
+		.def( init<const std::string &, size_t, size_t>(
+				(
+					arg( "name" ) = GraphComponent::defaultName<FlatImageProcessor>(),
+					arg( "minInputs" ),
+					arg( "maxInputs" ) = Imath::limits<size_t>::max()
+				)
+			)
+		)
+	;
 
 }
