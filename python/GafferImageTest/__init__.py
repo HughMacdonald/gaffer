@@ -92,6 +92,7 @@ from MixTest import MixTest
 from CatalogueTest import CatalogueTest
 from CollectImagesTest import CollectImagesTest
 from DeepMergeTest import DeepMergeTest
+from ImageStateTest import ImageStateTest
 
 if __name__ == "__main__":
 	import unittest
