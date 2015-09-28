@@ -37,6 +37,7 @@
 #include "GafferBindings/DependencyNodeBinding.h"
 
 #include "GafferImage/DeepMerge.h"
+#include "GafferImage/ImageState.h"
 
 #include "DeepNodeBinding.h"
 
@@ -48,5 +49,6 @@ void GafferImageModule::bindDeepNodes()
 {
 
     DependencyNodeClass<DeepMerge>();
+    DependencyNodeClass<ImageState>();
 
 }
