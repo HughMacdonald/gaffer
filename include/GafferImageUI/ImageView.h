@@ -59,6 +59,7 @@ IE_CORE_FORWARDDECLARE( ImageProcessor )
 IE_CORE_FORWARDDECLARE( Clamp )
 IE_CORE_FORWARDDECLARE( Grade )
 IE_CORE_FORWARDDECLARE( ImageStats )
+IE_CORE_FORWARDDECLARE( ImageState )
 IE_CORE_FORWARDDECLARE( ImagePlug )
 IE_CORE_FORWARDDECLARE( ImageSampler )
 
@@ -115,6 +116,9 @@ class ImageView : public GafferUI::View
 		void insertConverter( Gaffer::NodePtr converter );
 
 	private :
+
+		GafferImage::ImageState *imageStateNode();
+		const GafferImage::ImageState *imageStateNode() const;
 
 		GafferImage::Clamp *clampNode();
 		const GafferImage::Clamp *clampNode() const;
