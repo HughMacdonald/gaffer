@@ -39,7 +39,6 @@ import unittest
 import IECore
 
 import Gaffer
-import GafferTest
 import GafferImage
 import GafferImageTest
 import os
@@ -56,6 +55,13 @@ class BlurTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertEqual( c["out"].imageHash(), b["out"].imageHash() )
 		self.assertEqual( c["out"].image(), b["out"].image() )
+
+	def testNonFlatHashPassThrough( self ) :
+
+		blur = GafferImage.Blur()
+		blur["radius"].setValue( IECore.V2f( 1 ) )
+
+		self._testNonFlatHashPassThrough( blur )
 
 	def testExpandDataWindow( self ) :
 
