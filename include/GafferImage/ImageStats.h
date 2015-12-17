@@ -42,6 +42,7 @@
 #include "Gaffer/BoxPlug.h"
 
 #include "GafferImage/ImagePlug.h"
+#include "GafferImage/ImageState.h"
 
 namespace GafferImage
 {
@@ -87,6 +88,15 @@ class ImageStats : public Gaffer::ComputeNode
 		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
 
 	private :
+
+		// Input plug to receive the flattened image from the internal
+		// ImageState plug.
+		ImagePlug *flattenedInPlug();
+		const ImagePlug *flattenedInPlug() const;
+
+		// The internal ImageState node.
+		GafferImage::ImageState *imageState();
+		const GafferImage::ImageState *imageState() const;
 
 		std::string channelName( int colorIndex ) const;
 
