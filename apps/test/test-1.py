@@ -79,8 +79,9 @@ class test( Gaffer.Application ) :
 	def _startCoverage( self ) :
 		pythonModulesFolder = os.path.join( os.path.dirname( os.path.dirname( os.path.dirname( __file__ ) ) ), "python" )
 
-		from coverage import coverage
-		self._coverage = coverage( source = [ pythonModulesFolder ] )
+		import coverage
+		print "Coverage version : {}".format( coverage.__version__ )
+		self._coverage = coverage.coverage( source = [ pythonModulesFolder ] )
 		self._coverage.start()
 
 	def _stopCoverage( self, coverageFile ) :
