@@ -1,6 +1,12 @@
 test_module=$1
 
-./install/gaffer-*/bin/gaffer test -coverage $test_module.coverage.xml $test_module
+if [ $?GAFFER_COVERAGE ]; then
+	coverage="-coverage $test_module.coverage.xml"
+else
+	coverage=""
+fi
+
+./install/gaffer-*/bin/gaffer test $coverage $test_module
 
 result=$?
 
