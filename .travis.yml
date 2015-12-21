@@ -31,8 +31,8 @@ install:
     - export DL_SHADERS_PATH=$DELIGHT/shaders
     - export DL_DISPLAYS_PATH=$DELIGHT/displays
     - export PATH=$DELIGHT/bin:$PATH
-    - pip install codacy-coverage
     - if [ -n "$COMPILER_VERSION" ]; then export CXX="${CXX}-${COMPILER_VERSION}"; fi
+    - pip install --user codacy-coverage
 
 script:
     - scons -j 2 install CXX=$CXX CXXSTD=$CXXSTD ENV_VARS_TO_IMPORT=PATH RMAN_ROOT=$DELIGHT
