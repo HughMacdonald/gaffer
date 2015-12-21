@@ -14,6 +14,7 @@ addons:
         - doxygen
         - gcc-4.8
         - g++-4.8
+        - python-coverage
 
 before_install:
     - export DISPLAY=:99.0
@@ -29,6 +30,7 @@ install:
     - export DL_SHADERS_PATH=$DELIGHT/shaders
     - export DL_DISPLAYS_PATH=$DELIGHT/displays
     - export PATH=$DELIGHT/bin:$PATH
+    - pip install codacy-coverage
     - if [ -n "$COMPILER_VERSION" ]; then export CXX="${CXX}-${COMPILER_VERSION}"; fi
 
 script:
@@ -53,6 +55,7 @@ script:
     - source ./config/travis/runGafferTest GafferAppleseedTest
     - source ./config/travis/runGafferTest GafferAppleseedUITest
     - ./config/travis/printTestResults
+    - ./config/travis/submitCoverageReport
 
 compiler:
     - gcc
