@@ -35,6 +35,8 @@
 #
 ##########################################################################
 
+import os
+
 import IECore
 import Gaffer
 
@@ -58,6 +60,12 @@ class test( Gaffer.Application ) :
 					description = "The number of times to repeat the tests.",
 					defaultValue = 1,
 				),
+
+				IECore.StringParameter(
+					name = "coverage",
+					description = "Defines the path to write the coverage file to. If not specified, will not run coverage.",
+					defaultValue = "",
+				),
 			]
 
 		)
@@ -68,9 +76,23 @@ class test( Gaffer.Application ) :
 			}
 		)
 
+	def _startCoverage( self ) :
+		pythonModulesFolder = os.path.join( os.path.dirname( os.path.dirname( os.path.dirname( __file__ ) ) ), "python" )
+
+		from coverage import coverage
+		self._coverage = coverage( source = [ pythonModulesFolder ] )
+		self._coverage.start()
+
+	def _stopCoverage( self, coverageFile ) :
+		self._coverage.stop()
+		self._coverage.xml_report( outfile = coverageFile )
+
 	def _run( self, args ) :
 
 		import unittest
+
+		if args["coverage"].value :
+			self._startCoverage()
 
 		testSuite = unittest.TestSuite()
 		if args["testCases"] :
@@ -96,7 +118,12 @@ class test( Gaffer.Application ) :
 			testRunner = unittest.TextTestRunner( verbosity=2 )
 			testResult = testRunner.run( testSuite )
 			if not testResult.wasSuccessful() :
+				if args["coverage"].value :
+					self._stopCoverage( args["coverage"].value )
 				return 1
+
+		if args["coverage"].value :
+			self._stopCoverage( args["coverage"].value )
 
 		return 0
 
