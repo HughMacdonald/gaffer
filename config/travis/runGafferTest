@@ -1,6 +1,6 @@
 test_module=$1
 
-./install/gaffer-*/bin/gaffer test $test_module
+./install/gaffer-*/bin/gaffer test -coverage $test_module.coverage.xml $test_module
 
 result=$?
 
