@@ -72,4 +72,4 @@ matrix:
         - compiler: clang
           env: COMPILER_VERSION=4.8 CXXSTD=c++98
         - compiler: clang
-          env: COMPILER_VERSION=4.8 CXXSTD=c++11
+          env: COMPILER_VERSION=4.8 CXXSTD=c++11 GAFFER_COVERAGE=1
