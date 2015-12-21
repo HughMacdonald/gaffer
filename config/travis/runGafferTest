@@ -1,6 +1,6 @@
 test_module=$1
 
-if [ $?GAFFER_COVERAGE ]; then
+if [[ -n $GAFFER_COVERAGE ]]; then
 	coverage="-coverage $test_module.coverage.xml"
 else
 	coverage=""
