@@ -7,6 +7,6 @@ coverageFiles = glob.glob( "*.coverage.xml" )
 print "Submitting coverage files"
 
 for f in coverageFiles[:1] :
-	"cp {} coverage.xml".format( f )
+	os.system( "cp {} coverage.xml".format( f ) )
 
 os.system( "python-codacy-coverage -r coverage.xml" )
