@@ -43,6 +43,7 @@
 #include "boost/filesystem.hpp"
 
 #include "OpenImageIO/imageio.h"
+#include "OpenImageIO/deepdata.h"
 OIIO_NAMESPACE_USING
 
 #include "OpenEXR/ImfCRgbaFile.h"  // JUST to get symbols to figure out version!
@@ -102,6 +103,57 @@ void copyBufferArea( const float *inData, const Imath::Box2i &inArea, float *out
 		for( int x = copyArea.min.x; x < copyArea.max.x; x++, outPtr += outInc )
 		{
 			*outPtr = *inPtr++;
+		}
+	}
+}
+
+void copyDeepPixelData( ConstIntVectorDataPtr inSampleOffsets, const std::vector<ConstFloatVectorDataPtr> &inChannelData, const Imath::Box2i &inArea, DeepData &outData, const Imath::Box2i &outArea, const bool outYDown = false, Imath::Box2i copyArea = Imath::Box2i()  );
+{
+	if( empty( copyArea ) )
+	{
+		copyArea = intersection( inArea, outArea );
+	}
+
+	assert( contains( inArea, copyArea ) );
+	assert( contains( outArea, copyArea ) );
+
+	int pixelId;
+
+	int sampleId;
+	const std::vector<int>::const_iterator sampleOffsetsBegin = inSampleOffsets.begin();
+	std::vector<int>::const_iterator sampleOffsetsIt;
+	int sampleCount;
+
+	int channelId;
+	std::vector<ConstFloatVectorDataPtr>::const_iterator channelIterator;
+
+	std::vector<float>::const_iterator sampleDataIt;
+
+	for( int y = copyArea.min.y; y < copyArea.max.y; ++y )
+	{
+		size_t yOffsetIn = y - inArea.min.y;
+		size_t yOffsetOut = y - outArea.min.y;
+
+		if( outYDown )
+		{
+			yOffsetOut = outArea.max.y - y - 1;
+		}
+
+		pixelId = ( yOffsetOut * outArea.size().x ) + ( copyArea.min.x - outArea.min.x );
+		sampleOffsetsIt = sampleOffsetsBegin + ( yOffsetIn * inArea.size().x ) + ( copyArea.min.x - inArea.min.x );
+		for( int x = copyArea.min.x; x < copyArea.max.x; ++x, ++pixelId, ++sampleOffsetsIt )
+		{
+			sampleCount = sampleCount( sampleOffsetsIt, sampleOffsetsBegin );
+
+			outData.set_samples( pixelId, sampleCount );
+			for( channelIterator = inChannelData.begin(), channelId = 0; channelIterator != inChannelData.end(); ++channelIterator, ++channelId )
+			{
+				sampleDataRange = sampleRange( *channelIterator, sampleOffsetsIt, sampleOffsetsBegin );
+				for( sampleDataIt = sampleDataRange.begin(), sampleId = 0; sampleDataIt != sampleDataRange.end(); ++sampleDataIt, ++sampleId )
+				{
+					outData.set_deep_data( pixelId, channelId, sampleId, *sampleDataIt );
+				}
+			}
 		}
 	}
 }
@@ -183,16 +235,64 @@ class DeepScanlineWriter
 				m_tilesBounds( Imath::Box2i( ImagePlug::tileOrigin( processWindow.min ), ImagePlug::tileOrigin( processWindow.max - Imath::V2i( 1 ) ) + Imath::V2i( ImagePlug::tileSize() ) ) )
 
 		{
-			// m_deepData.init( m_spec.width * ImagePlug::tileSize(), m_spec.channelnames.size() )
+			m_deepData = createDeepData( m_spec.width, ImagePlug::tileSize(), m_spec );
+
+			writeInitialEmptyScanlines();
 		}
 
+		DeepData createDeepData( const int width, const int height, const ImageSpec &spec )
+		{
+			DeepData deepData;
+
+			if( spec.channelformats.size() == spec.nchannels )
+			{
+				deepData.init( width * height, spec.nchannels, spec.channelformats, spec.channelnames );
+			}
+			else
+			{
+				deepData.init( width * height, spec.nchannels, spec.format, spec.channelnames );
+			}
+
+			return deepData;
+		}
 
 		void finish()
 		{
+			const int scanlinesEnd = m_format.toEXRSpace( m_tilesBounds.min.y - 1 );
+			if( scanlinesEnd < ( m_spec.y + m_spec.height ) )
+			{
+				writeEmptyScanlines( scanlinesEnd, m_spec.y + m_spec.height );
+			}
 		}
 
 		void operator()( const ImagePlug *imagePlug, const V2i &tileOrigin, ConstIntVectorDataPtr sampleOffsets, const std::vector<ConstFloatVectorDataPtr> channelData )
 		{
+			const Imath::Box2i inTileBounds( tileOrigin, tileOrigin + Imath::V2i( ImagePlug::tileSize() ) );
+			const Imath::Box2i exrInTileBounds( m_format.toEXRSpace( inTileBounds ) );
+
+			const Imath::Box2i exrScanlinesBounds( Imath::V2i( m_spec.x, exrInTileBounds.min.y ), Imath::V2i( m_spec.x + m_spec.width - 1, exrInTileBounds.max.y ) );
+			const Imath::Box2i scanlinesBounds( m_format.fromEXRSpace( exrScanlinesBounds ) );
+
+			int yMin = std::max( exrInTileBounds.min.y, m_spec.y );
+			int yMax = std::min( exrInTileBounds.max.y + 1, m_spec.y + m_spec.height );
+
+			if( firstTileOfRow( tileOrigin ) )
+			{
+				m_deepData.clear();
+			}
+
+			Imath::Box2i copyArea( intersection( m_processWindow, intersection( inTileBounds, scanlinesBounds ) ) );
+
+			copyDeepPixelData( sampleOffsets, channelData, inTileBounds, m_deepData, scanlinesBounds, true, copyArea );
+
+			if( lastTileOfRow( tileOrigin ) )
+			{
+				writeDeepScanlines(
+					m_deepData,
+					yMin,
+					yMax
+				);
+			}
 		}
 
 	private:
@@ -204,6 +304,45 @@ class DeepScanlineWriter
 		inline bool lastTileOfRow( const Imath::V2i &tileOrigin ) const
 		{
 			return tileOrigin.x == ( m_tilesBounds.max.x - ImagePlug::tileSize() ) ;
+		}
+
+		void writeDeepScanlines( const DeepData &deepData, const int exrYBegin, const int exrYEnd ) const
+		{
+			if ( !m_out->write_deep_scanlines( exrYBegin, exrYEnd, 0, deepData ) )
+			{
+				throw IECore::Exception( boost::str( boost::format( "Could not write deep scanline to \"%s\", error = %s" ) % m_fileName % m_out->geterror() ) );
+			}
+		}
+
+		void writeEmptyScanlines( const int yBegin, const int yEnd )
+		{
+
+			for( int y = yBegin; y < yEnd; ++y )
+			{
+				int pixelId = y - yBegin;
+				for( int x = 0; x < m_spec.width; ++x, ++pixelId )
+				{
+					m_deepData.setSamples( pixelId, 0 );
+				}
+			}
+
+			for(
+				int emptyScanlinesBegin = yBegin, blankScanlinesEnd = std::min( yBegin + ImagePlug::tileSize(), yEnd );
+				emptyScanlinesEnd <= yEnd;
+				emptyScanlinesBegin += ImagePlug::tileSize(), emptyScanlinesEnd += ImagePlug::tileSize()
+			)
+			{
+				writeDeepScanlines( emptyScanlinesBegin, std::min( emptyScanlinesEnd, yEnd ) );
+			}
+		}
+
+		void writeInitialEmptyScanlines()
+		{
+			const int scanlinesBegin = m_format.toEXRSpace( m_tilesBounds.max.y - 1 );
+			if( scanlinesBegin > m_spec.y )
+			{
+				writeEmptyScanlines( m_spec.y, scanlinesBegin );
+			}
 		}
 
 		ImageOutputPtr m_out;
