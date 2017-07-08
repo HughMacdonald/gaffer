@@ -39,6 +39,7 @@
 #include "GafferBindings/ComputeNodeBinding.h"
 
 #include "GafferImage/FlatImageProcessor.h"
+#include "GafferImage/CopyChannels.h"
 #include "GafferImage/Merge.h"
 
 #include "FlatImageProcessorBinding.h"
@@ -62,6 +63,8 @@ void GafferImageModule::bindFlatImageProcessor()
 			)
 		)
 	;
+
+	DependencyNodeClass<CopyChannels>();
 
 	{
 		scope s = GafferBindings::DependencyNodeClass<Merge>();
