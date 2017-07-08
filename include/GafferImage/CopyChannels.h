@@ -39,12 +39,12 @@
 
 #include "Gaffer/StringPlug.h"
 
-#include "GafferImage/ImageProcessor.h"
+#include "GafferImage/FlatImageProcessor.h"
 
 namespace GafferImage
 {
 
-class CopyChannels : public ImageProcessor
+class CopyChannels : public FlatImageProcessor
 {
 
 	public :
@@ -52,7 +52,7 @@ class CopyChannels : public ImageProcessor
 		CopyChannels( const std::string &name=defaultName<CopyChannels>() );
 		virtual ~CopyChannels();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::CopyChannels, CopyChannelsTypeId, ImageProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::CopyChannels, CopyChannelsTypeId, FlatImageProcessor );
 
 		Gaffer::StringPlug *channelsPlug();
 		const Gaffer::StringPlug *channelsPlug() const;
