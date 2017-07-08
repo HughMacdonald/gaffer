@@ -212,41 +212,43 @@ class FormatPlugSerialiser : public GafferBindings::ValuePlugSerialiser
 void GafferImageModule::bindCore()
 {
 
-	PlugClass<ImagePlug>()
-		.def(
-			init< const std::string &, Gaffer::Plug::Direction, unsigned >
-			(
+	{
+		scope s = PlugClass<ImagePlug>()
+			.def(
+				init< const std::string &, Gaffer::Plug::Direction, unsigned >
 				(
-					arg( "name" ) = Gaffer::GraphComponent::defaultName<ImagePlug>(),
-					arg( "direction" ) = Gaffer::Plug::In,
-					arg( "flags" ) = Gaffer::Plug::Default
+					(
+						arg( "name" ) = Gaffer::GraphComponent::defaultName<ImagePlug>(),
+						arg( "direction" ) = Gaffer::Plug::In,
+						arg( "flags" ) = Gaffer::Plug::Default
+					)
 				)
 			)
-		)
-		.def( "channelData", &channelData, ( arg( "_copy" ) = true ) )
-		.def( "channelDataHash", &channelDataHash )
-		.def( "sampleOffsets", &sampleOffsets, ( arg( "_copy" ) = true ) )
-		.def( "sampleOffsetsHash", &ImagePlug::sampleOffsetsHash )
-		.def( "image", &image )
-		.def( "imageHash", &imageHash )
-		.def( "tileSize", &ImagePlug::tileSize ).staticmethod( "tileSize" )
-		.def( "tileIndex", &ImagePlug::tileIndex ).staticmethod( "tileIndex" )
-		.def( "tileOrigin", &ImagePlug::tileOrigin ).staticmethod( "tileOrigin" )
-		.def( "emptyTileSampleOffsets", &emptyTileSampleOffsets, ( arg( "_copy" ) = true ) ).staticmethod( "emptyTileSampleOffsets" )
-		.def( "flatTileSampleOffsets", &flatTileSampleOffsets, ( arg( "_copy" ) = true ) ).staticmethod( "flatTileSampleOffsets" )
-		.def( "emptyTile", &emptyTile, ( arg( "_copy" ) = true ) ).staticmethod( "emptyTile" )
-		.def( "blackTile", &blackTile, ( arg( "_copy" ) = true ) ).staticmethod( "blackTile" )
-		.def( "whiteTile", &whiteTile, ( arg( "_copy" ) = true ) ).staticmethod( "whiteTile" )
-	;
+			.def( "channelData", &channelData, ( arg( "_copy" ) = true ) )
+			.def( "channelDataHash", &channelDataHash )
+			.def( "sampleOffsets", &sampleOffsets, ( arg( "_copy" ) = true ) )
+			.def( "sampleOffsetsHash", &ImagePlug::sampleOffsetsHash )
+			.def( "image", &image )
+			.def( "imageHash", &imageHash )
+			.def( "tileSize", &ImagePlug::tileSize ).staticmethod( "tileSize" )
+			.def( "tileIndex", &ImagePlug::tileIndex ).staticmethod( "tileIndex" )
+			.def( "tileOrigin", &ImagePlug::tileOrigin ).staticmethod( "tileOrigin" )
+			.def( "emptyTileSampleOffsets", &emptyTileSampleOffsets, ( arg( "_copy" ) = true ) ).staticmethod( "emptyTileSampleOffsets" )
+			.def( "flatTileSampleOffsets", &flatTileSampleOffsets, ( arg( "_copy" ) = true ) ).staticmethod( "flatTileSampleOffsets" )
+			.def( "emptyTile", &emptyTile, ( arg( "_copy" ) = true ) ).staticmethod( "emptyTile" )
+			.def( "blackTile", &blackTile, ( arg( "_copy" ) = true ) ).staticmethod( "blackTile" )
+			.def( "whiteTile", &whiteTile, ( arg( "_copy" ) = true ) ).staticmethod( "whiteTile" )
+		;
 
-	enum_<ImagePlug::DeepState>( "DeepState" )
-		.value( "Messy", ImagePlug::Messy )
-		.value( "Sorted", ImagePlug::Sorted )
-		.value( "NonOverlapping", ImagePlug::NonOverlapping )
-		.value( "SingleSample", ImagePlug::SingleSample )
-		.value( "Tidy", ImagePlug::Tidy )
-		.value( "Flat", ImagePlug::Flat )
-	;
+		enum_<ImagePlug::DeepState>( "DeepState" )
+			.value( "Messy", ImagePlug::Messy )
+			.value( "Sorted", ImagePlug::Sorted )
+			.value( "NonOverlapping", ImagePlug::NonOverlapping )
+			.value( "SingleSample", ImagePlug::SingleSample )
+			.value( "Tidy", ImagePlug::Tidy )
+			.value( "Flat", ImagePlug::Flat )
+		;
+	}
 
 	typedef ComputeNodeWrapper<ImageNode> ImageNodeWrapper;
 	GafferBindings::DependencyNodeClass<ImageNode, ImageNodeWrapper>();
