@@ -41,7 +41,6 @@
 
 #include "GafferImage/DeleteChannels.h"
 #include "GafferImage/CollectImages.h"
-#include "GafferImage/CopyChannels.h"
 #include "GafferImage/Mix.h"
 #include "GafferImage/Shuffle.h"
 
@@ -112,7 +111,6 @@ void GafferImageModule::bindImageProcessor()
 	;
 
 	DependencyNodeClass<CollectImages>();
-	DependencyNodeClass<CopyChannels>();
 	DependencyNodeClass<Mix>();
 
 	{
