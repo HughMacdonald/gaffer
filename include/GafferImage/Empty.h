@@ -69,7 +69,7 @@ class Empty : public ImageNode
 
         virtual GafferImage::Format computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const;
         virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
-        virtual IECore::ConstCompoundObjectPtr computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const;
+        virtual IECore::ConstCompoundDataPtr computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const;
         virtual int computeDeepState( const Gaffer::Context *context, const ImagePlug *parent ) const;
         virtual IECore::ConstIntVectorDataPtr computeSampleOffsets( const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
         virtual IECore::ConstStringVectorDataPtr computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const;
